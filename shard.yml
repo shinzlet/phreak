@@ -1,0 +1,13 @@
+name: Phreak
+version: 0.1.0
+
+description: |
+  A CLI with similar syntax to the builtin OptionParser, but with
+  more flexibility.
+
+authors:
+  - shinz <sethhinz@me.com>
+
+crystal: 0.30.0
+
+license: GNU GPL v3
