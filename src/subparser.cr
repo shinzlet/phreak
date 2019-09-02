@@ -13,15 +13,6 @@ module Phreak
 		def initialize(@root : Parser | Nil)
 		end
 		
-		# This is the internal method that actually binds events to keywords. The difference is that
-		# the public method doesn't require a root parser, and provides one to this method. This allows
-		# `Parser` to override the bind method without implementing all the logic anew - it just calls
-		# this private method where `root = self`.
-		protected def bind(root : Parser, word : String | Nil = nil, long_flag : String | Nil = nil,
-					short_flag : String | Nil = nil, &block : Subparser ->)
-			@bindings.push()
-		end
-
 		# Binds a keyword or keywords to a callback.
 		# 
 		# Accepts any of these optional keyword types:
@@ -37,9 +28,7 @@ module Phreak
 		def bind(word : String | Nil = nil, long_flag : String | Nil = nil,
 					short_flag : String | Nil = nil, &block : Subparser ->)
 			if root = @root
-				bind(root, word, long_flag, short_flag) do |parser|
-					block.call parser
-				end
+
 			else
 				raise NilRootException.new("Cannot bind - root is nill, likely due to a Subparser initialized on it's own.")
 			end
