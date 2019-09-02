@@ -5,6 +5,7 @@ require "./subparser.cr"
 # but with much more flexibility.
 module Phreak
 	extend self
+	VERSION = "0.1.0"
 
 	# Equivalent to invoking `Phreak::parse` with args = ARGV.
 	def self.parse!(&block : Subparser -> Nil)
@@ -18,11 +19,11 @@ module Phreak
 	def self.parse(args : Array(String), &block : Subparser -> Nil)
 		# First, we create a master parser. See the documenation of `Phreak::Parser`
 		# for more details on what it is, and why it's an extended subparser.
-		parser = Parser.new
+		parser = Parser.new args
 		# Now, we call the setup block - this is where the CLI can create bindings
 		# to the parser instance.
 		yield parser
 		# Finally, we can actually parse the arguments.
-		parser.parse args
+		parser.begin_parsing
 	end
 end
