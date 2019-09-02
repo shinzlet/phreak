@@ -8,7 +8,7 @@ module Phreak
 	VERSION = "0.1.0"
 
 	# Equivalent to invoking `Phreak::parse` with args = ARGV.
-	def self.parse!(&block : Subparser -> Nil) : Nil
+	def self.parse!(&block : Parser -> Nil) : Nil
 		parse ARGV do |sp|
 			block.call sp
 		end
@@ -16,7 +16,7 @@ module Phreak
 
 	# Initializes a parser, and yields to a setup block with the created
 	# subparser.
-	def self.parse(args : Array(String), &block : Subparser -> Nil) : Nil
+	def self.parse(args : Array(String), &block : Parser -> Nil) : Nil
 		# First, we create a master parser. See the documenation of `Phreak::Parser`
 		# for more details on what it is, and why it's an extended subparser.
 		parser = Parser.new args
