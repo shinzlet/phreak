@@ -10,4 +10,7 @@ module Phreak
 
 	class InsufficientArgumentsException < Exception
 	end
+	
+	class NilParentException < Exception
+	end
 end

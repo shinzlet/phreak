@@ -10,9 +10,10 @@ module Phreak
 			short_flag : Char | Nil,
 			event : Proc(Subparser, String, Nil)
 
-		@insufficient_arguments_handler : Proc(String, Nil) | Nil
+		protected property insufficient_arguments_handler : Proc(String, Nil)
 
-		def initialize(@root : Parser | Nil)
+		def initialize(@parent : Subparser | Nil)
+			@insufficient_arguments_handler = ->(apex : String) {default_insufficient_arguments_handler apex}
 		end
 		
 		# Binds a keyword or keywords to a callback.
@@ -53,6 +54,21 @@ module Phreak
 		def bind(word : String | Nil = nil, long_flag : String | Nil = nil,
 					short_flag : Char | Nil = nil, &block : Subparser, String -> Nil) : Nil
 			@bindings.push Binding.new(word, long_flag, short_flag, block)
+		end
+
+		# Binds a block to a callback in the case that there are not enough arguments to continue parsing.
+		def insufficient_arguments(&block : String ->)
+			@insufficient_arguments_handler = block
+		end
+
+		protected def default_insufficient_arguments_handler(apex : String)
+			if parent = @parent
+				parent.insufficient_arguments_handler.call apex
+			else
+				raise NilParentException.new
+				return
+			end
+
 		end
 
 		# Accepts a raw argument and determines if it is a word, short flag, or long flag.
@@ -144,20 +160,24 @@ module Phreak
 			# If the word does match, we need to invoke the event. First, we'll create
 			# a subparser to pass into that event, so that it can bind the next keyword
 			# if desired.
-			subparser = Subparser.new root
+			subparser = Subparser.new self
 			
 			binding.event.call(subparser, match)
 
 			# Now that the event code has run, we want to check if any bindings were created
 			# in the subparser we passed in.
 			if subparser.bindings.size > 0
-				# At least one event was created, which means that the cli is requesting that
-				# the next word be equal to something.
-				next_token = root.next_token
-				if next_token
-					# If there was a token still available, we can call the subparser's `process_token`
-					# method.
-					subparser.process_token(next_token, root)
+				# At least one event was created, which means that the cli is expecting another
+				# token.
+				begin
+					next_token = root.next_token
+					if next_token
+						# If there was a token still available, we can call the subparser's `process_token`
+						# method.
+						subparser.process_token(next_token, root)
+					end
+				rescue ex : IndexError
+					@insufficient_arguments_handler.call match
 				end
 			end
 		end
