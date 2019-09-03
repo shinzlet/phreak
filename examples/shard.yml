@@ -1,0 +1,14 @@
+name: examples
+version: 0.1.0
+
+authors:
+  - Seth Hinz <sethhinz@me.com>
+
+dependencies:
+  phreak:
+    github: shinzlet/phreak
+
+description: |
+  Several examples of how to use Phreak.
+
+license: GNU GPL v3

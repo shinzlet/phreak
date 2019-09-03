@@ -179,6 +179,27 @@ module Phreak
 				rescue ex : IndexError
 					@insufficient_arguments_handler.call match
 				end
+			else
+				# This branch in the code is reached if the subparser did not create any additional bindings -
+				# In essence, we have reached a local maximum in the nesting of this command.
+				#
+				# If we return here, the stack will collapse back down to `Parser#begin_parsing`. This means
+				# that if we have a binding structure like this:
+				# a > crystal
+				#  	b > build (consumes next_token to get filename)
+				# 			c > --threads (consumes next_token to get threadcount)
+			   # 			d > --time
+				# and we run the command `crystal build test.cr --threads 1 --time, we would run into a problem -
+				# the command would climb and climb until the apex (the level where `-threads` and `--time` are),
+				# ultimately capturing the threads argument successfully. But, the stack would collapse, and the
+				# --time argument would never get read. So, what we really want to do is create a loop instead
+				# of returning. We will consume new arguments at the highest level available to us (our global
+				# maximum). This means that time will be correctly read. Keep in mind that this loop is recursive!
+				if root.token_available?
+					# This typecast is safe, as we just assured next_token (String | Nil) is not Nil
+					next_token = root.next_token.as_s
+					process_token(next_token, root)
+				end
 			end
 		end
 	end

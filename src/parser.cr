@@ -18,9 +18,7 @@ module Phreak
 					handler.call
 				end
 			else
-				while @args.size > 0
-					process_token(next_token, self)
-				end
+				process_token(next_token, self)
 			end
 		end
 

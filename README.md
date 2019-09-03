@@ -1,30 +1,35 @@
-# .
+# Phreak
 
-TODO: Write a description here
+Phreak is a CLI builder in the style of Crystal's builtin OptionParser. It aims
+to provide greater flexibility by integrating subcommands natively, all while
+retaining a very simple callback based code style.
+
+Note that, at the moment, Phreak's syntax may be subject to change.
 
 ## Installation
 
-1. Add the dependency to your `shard.yml`:
+1. Add phreak to your `shard.yml`:
 
    ```yaml
    dependencies:
-     .:
-       github: your-github-user/.
+     phreak:
+       github: shinzlet/phreak
    ```
 
 2. Run `shards install`
 
 ## Usage
 
-```crystal
-require "."
-```
+Check out [examples](examples.md) for more demonstrations of how Phreak can be
+implemented into your project.
 
-TODO: Write usage instructions here
+```crystal
+require "phreak"
+```
 
 ## Development
 
-TODO: Write development instructions here
+Please see [phreak's vivisection](vivisection.md)
 
 ## Contributing
 
@@ -36,4 +41,4 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [shinz](https://github.com/your-github-user) - creator and maintainer
+- [shinz](https://github.com/shinzlet) - creator and maintainer
