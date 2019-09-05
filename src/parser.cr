@@ -18,7 +18,7 @@ module Phreak
 		# Starts the parsing chain. If there are no arguments to parse, the default action handler will be called.
 		protected def begin_parsing : Nil
 			if @args.size == 0
-				handler.call
+				@default_action_handler.call
 			else
 				process_token(next_token, self)
 			end
@@ -29,7 +29,7 @@ module Phreak
 			@args.delete_at(0)
 		end
 
-		def token_available? : Boolean
+		def token_available? : Bool
 			@args.size > 0
 		end
 

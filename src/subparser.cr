@@ -197,7 +197,7 @@ module Phreak
 				# maximum). This means that time will be correctly read. Keep in mind that this loop is recursive!
 				if root.token_available?
 					# This typecast is safe, as we just assured next_token (String | Nil) is not Nil
-					next_token = root.next_token.as_s
+					next_token = root.next_token.to_s
 					process_token(next_token, root)
 				end
 			end
