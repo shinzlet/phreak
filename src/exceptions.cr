@@ -13,4 +13,7 @@ module Phreak
 	
 	class NilParentException < Exception
 	end
+
+	class NoArgumentsException < Exception
+	end
 end
