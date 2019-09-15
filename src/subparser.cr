@@ -5,6 +5,7 @@ module Phreak
 	class Subparser
 		protected property bindings : Array(Binding) = [] of Binding
 		protected property fuzzy_bindings : Array(Binding) = [] of Binding
+		protected property wildcard : Binding | Nil = nil
 
 		private record Binding,
 			word : String | Nil,
@@ -14,6 +15,9 @@ module Phreak
 
 		protected property insufficient_arguments_handler : Proc(String, Nil)
 		protected property unrecognized_arguments_handler : Proc(String, Nil)
+
+		# Sets the maximum fuzzy finding distance allowed.
+		setter max_fuzzy_distance = 3
 
 		def initialize(@parent : Subparser | Nil)
 			@insufficient_arguments_handler = ->(apex : String) {default_insufficient_arguments_handler apex}
@@ -66,6 +70,14 @@ module Phreak
 			@fuzzy_bindings.push Binding.new(word, long_flag, nil, block)
 		end
 
+		# Creates a wildcard binding. This is more or less equivalent to calling next_token on the
+		# root `Parser`, however you don't have to worry about catching an IndexError. Nothing will
+		# stop you from calling grab multiple times, but a subparser will only keep track of the
+		# final bound callback.
+		def grab(&block : Subparser, String -> Nil) : Nil
+			@wildcard = Binding.new(nil, nil, nil, block)
+		end
+
 		# Binds a block to a callback in the case that there are not enough arguments to continue parsing.
 		def insufficient_arguments(&block : String ->)
 			@insufficient_arguments_handler = block
@@ -89,12 +101,15 @@ module Phreak
 			end
 		end
 
+		
+		# Sets the handler block to yield to in the case of an unrecognized argument.
+		# Provides the argument to the callback.
 		def unrecognized_arguments(&block : String ->)
 			@unrecognized_arguments_handler = block
 		end
 
 		# See the documentation for `default_insufficient_arguments_handler`
-		def default_unrecognized_arguments_handler(name : String)
+		protected def default_unrecognized_arguments_handler(name : String)
 			if parent = @parent
 				parent.unrecognized_arguments_handler.call name
 			else
@@ -107,6 +122,9 @@ module Phreak
 		# Once it's type is determined, this method runs the correct handler to call an event.
 		# If it is malformed, a `MalformedTokenException` is raised.
 		protected def process_token(token : String, root : Parser) : Nil
+			# A wildcard defined with `Subparser#grab` will recieve the raw argument.
+			raw = token
+
 			if token.size == 0
 				raise MalformedTokenException.new("Token is an empty string!")
 			end
@@ -148,7 +166,11 @@ module Phreak
 					handle_name(root, long_flag: token)
 				end
 			rescue ex : UnrecognizedTokenException
-				@unrecognized_arguments_handler.call token
+				if wildcard = @wildcard
+					invoke_event(wildcard, raw, root)
+				else
+					@unrecognized_arguments_handler.call token
+				end
 			end
 		end
 
@@ -203,7 +225,8 @@ module Phreak
 				end
 			end
 
-			if best
+			puts min_distance
+			if best && min_distance <= @max_fuzzy_distance
 				if match = word ? best.word : best.long_flag
 					invoke_event(best, match, root)
 					return

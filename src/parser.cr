@@ -28,15 +28,17 @@ module Phreak
 			end
 		end
 
-		# Returns the next argument in the stack. May raise an exception if `@args.size == 0`
+		# Returns the next token, if available. Will raise an exception if `@args.size == 0`
 		def next_token : String | Nil
 			@args.delete_at(0)
 		end
 
+		# Returns true if there is at least one token remaining to be parsed.
 		def token_available? : Bool
 			@args.size > 0
 		end
 
+		# Yields to a callback if `Phreak::parse` is called with no arguments.
 		def default(&block : Proc(Void))
 			@default_action_handler = block
 		end
