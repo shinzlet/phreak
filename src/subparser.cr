@@ -225,7 +225,6 @@ module Phreak
 				end
 			end
 
-			puts min_distance
 			if best && min_distance <= @max_fuzzy_distance
 				if match = word ? best.word : best.long_flag
 					invoke_event(best, match, root)
