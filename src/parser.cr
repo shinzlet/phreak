@@ -10,6 +10,10 @@ module Phreak
 				raise InsufficientArgumentsException.new "Insufficient arguments provided after keyword '#{apex}', and no handlers specified."
 			end
 
+			@unrecognized_arguments_handler = ->(name : String) do
+				raise UnrecognizedTokenException.new "Unrecognized token '#{name}' encountered, with no unrecognized argument handlers specified."
+			end
+
 			@default_action_handler = ->() do
 				raise NoArgumentsException.new "No arguments were supplied!"
 			end

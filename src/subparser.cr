@@ -1,8 +1,10 @@
-require "./exceptions.cr"
+require "./exceptions.cr" 
+require "levenshtein"
 
 module Phreak
 	class Subparser
 		protected property bindings : Array(Binding) = [] of Binding
+		protected property fuzzy_bindings : Array(Binding) = [] of Binding
 
 		private record Binding,
 			word : String | Nil,
@@ -11,9 +13,11 @@ module Phreak
 			event : Proc(Subparser, String, Nil)
 
 		protected property insufficient_arguments_handler : Proc(String, Nil)
+		protected property unrecognized_arguments_handler : Proc(String, Nil)
 
 		def initialize(@parent : Subparser | Nil)
 			@insufficient_arguments_handler = ->(apex : String) {default_insufficient_arguments_handler apex}
+			@unrecognized_arguments_handler = ->(name : String) {default_unrecognized_arguments_handler name}
 		end
 		
 		# Binds a keyword or keywords to a callback.
@@ -56,11 +60,26 @@ module Phreak
 			@bindings.push Binding.new(word, long_flag, short_flag, block)
 		end
 
+		# Identical to bind, except the match for `word` or `long_flag` is fuzzy. These callbacks are
+		# not considered until all else has failed.
+		def fuzzy_bind(word : String | Nil = nil, long_flag : String | Nil = nil, &block : Subparser, String -> Nil) : Nil
+			@fuzzy_bindings.push Binding.new(word, long_flag, nil, block)
+		end
+
 		# Binds a block to a callback in the case that there are not enough arguments to continue parsing.
 		def insufficient_arguments(&block : String ->)
 			@insufficient_arguments_handler = block
 		end
 
+		# By default, the insufficient exception handler just defers the error to its parent.
+		# This allows for an error bubbling mechanism - if any of the subparsers above this one
+		# on the chain have overridden the insufficient arguments handler, the exception will
+		# be captured there, where it can be handled in whatever way the user intends. If the
+		# user never defines an insufficient argument handler (via `insufficient_arugments`),
+		# this error will continue to bubble, eventually reaching the Parser at the root.
+		# The Parser is then able to define it's own functions for handling this error, either
+		# letting the exception halt execution of the program, or by printing an error message.
+		# By default, it just throws the error as of September 4th 2019.
 		protected def default_insufficient_arguments_handler(apex : String)
 			if parent = @parent
 				parent.insufficient_arguments_handler.call apex
@@ -68,7 +87,20 @@ module Phreak
 				raise NilParentException.new
 				return
 			end
+		end
 
+		def unrecognized_arguments(&block : String ->)
+			@unrecognized_arguments_handler = block
+		end
+
+		# See the documentation for `default_insufficient_arguments_handler`
+		def default_unrecognized_arguments_handler(name : String)
+			if parent = @parent
+				parent.unrecognized_arguments_handler.call name
+			else
+				raise NilParentException.new
+				return
+			end
 		end
 
 		# Accepts a raw argument and determines if it is a word, short flag, or long flag.
@@ -82,6 +114,8 @@ module Phreak
 			prefix_dashes = 0
 
 			#TODO: make less cryptic
+			# This block just couns and strips up to two dashes from the left
+			# side of the parameter.
 			(0..Math.min(1, token.size - 1)).each do |i|
 				if token[i] != '-'
 					break
@@ -92,17 +126,29 @@ module Phreak
 
 			token = token[prefix_dashes..-1]
 
+			# If stripping between zero and two left dashes off the token made
+			# it empty, it was either "-" or "--". Regardless, it's useless.
 			if token.size == 0
 				raise MalformedTokenException.new("Token is just dashes!")
 			end
 
-			case prefix_dashes
-			when 0 
-				handle_name(root, word: token)
-			when 1
-				handle_chars(root, token)
-			when 2
-				handle_name(root, long_flag: token)
+			# Note that the `handle_*something*` functions can all throw an
+			# `UnrecognizedTokenException` in the event that the token is unrecognized.
+			# This begin-rescue block just catches that and bubbles the error up 
+			# (see `Subparser#default_unrecognized_arguments_handler` for info).
+			begin
+				# This statement just chooses how to handle the token depending on what
+				# type of argument it was - word, short flag, or long flag respectively.
+				case prefix_dashes
+				when 0 
+					handle_name(root, word: token)
+				when 1
+					handle_chars(root, token)
+				when 2
+					handle_name(root, long_flag: token)
+				end
+			rescue ex : UnrecognizedTokenException
+				@unrecognized_arguments_handler.call token
 			end
 		end
 
@@ -128,6 +174,38 @@ module Phreak
 					invoke_event(binding, match, root)
 
 					# We found a match, so there's no point continuing this loop.
+					return
+				end
+			end
+
+			best : Binding | Nil = nil
+			min_distance : UInt8 = (2**8-1).to_u8
+
+			# This code is messy and redundant. Unfortunately, there's very little I think I can do
+			# to improve code quality here, as we have to refer to different properties on the record.
+			if word
+				@fuzzy_bindings.each do |binding|
+					if keyword = binding.word
+						if (dist = Levenshtein.distance(keyword, word)) < min_distance
+							min_distance = dist.to_u8
+							best = binding
+						end
+					end
+				end
+			elsif long_flag
+				@fuzzy_bindings.each do |binding|
+					if keyword = binding.long_flag
+						if (dist = Levenshtein.distance(keyword, long_flag)) < min_distance
+							min_distance = dist.to_u8
+							best = binding
+						end
+					end
+				end
+			end
+
+			if best
+				if match = word ? best.word : best.long_flag
+					invoke_event(best, match, root)
 					return
 				end
 			end
@@ -166,7 +244,7 @@ module Phreak
 
 			# Now that the event code has run, we want to check if any bindings were created
 			# in the subparser we passed in.
-			if subparser.bindings.size > 0
+			if subparser.bindings.size > 0 || subparser.fuzzy_bindings.size > 0
 				# At least one event was created, which means that the cli is expecting another
 				# token.
 				begin
