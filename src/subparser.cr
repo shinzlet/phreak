@@ -266,7 +266,7 @@ module Phreak
 
 			# Now that the event code has run, we want to check if any bindings were created
 			# in the subparser we passed in.
-			if subparser.bindings.size > 0 || subparser.fuzzy_bindings.size > 0
+			if subparser.bindings.size > 0 || subparser.fuzzy_bindings.size > 0 || subparser.wildcard
 				# At least one event was created, which means that the cli is expecting another
 				# token.
 				begin
@@ -277,7 +277,7 @@ module Phreak
 						subparser.process_token(next_token, root)
 					end
 				rescue ex : IndexError
-					@insufficient_arguments_handler.call match
+					subparser.insufficient_arguments_handler.call match
 				end
 			else
 				# This branch in the code is reached if the subparser did not create any additional bindings -
