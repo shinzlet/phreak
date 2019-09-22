@@ -13,14 +13,14 @@ module Phreak
 			short_flag : Char | Nil,
 			event : Proc(Subparser, String, Nil)
 
-		protected property insufficient_arguments_handler : Proc(String, Nil)
+		protected property missing_arguments_handler : Proc(String, Nil)
 		protected property unrecognized_arguments_handler : Proc(String, Nil)
 
 		# Sets the maximum fuzzy finding distance allowed.
 		setter max_fuzzy_distance = 3
 
 		def initialize(@parent : Subparser | Nil)
-			@insufficient_arguments_handler = ->(apex : String) {default_insufficient_arguments_handler apex}
+			@missing_arguments_handler = ->(apex : String) {default_missing_arguments_handler apex}
 			@unrecognized_arguments_handler = ->(name : String) {default_unrecognized_arguments_handler name}
 		end
 		
@@ -79,22 +79,22 @@ module Phreak
 		end
 
 		# Binds a block to a callback in the case that there are not enough arguments to continue parsing.
-		def insufficient_arguments(&block : String ->)
-			@insufficient_arguments_handler = block
+		def missing_args(&block : String ->)
+			@missing_arguments_handler = block
 		end
 
-		# By default, the insufficient exception handler just defers the error to its parent.
+		# By default, the missing exception handler just defers the error to its parent.
 		# This allows for an error bubbling mechanism - if any of the subparsers above this one
-		# on the chain have overridden the insufficient arguments handler, the exception will
+		# on the chain have overridden the missing arguments handler, the exception will
 		# be captured there, where it can be handled in whatever way the user intends. If the
-		# user never defines an insufficient argument handler (via `insufficient_arugments`),
+		# user never defines a missing argument handler (via `missing_arugments`),
 		# this error will continue to bubble, eventually reaching the Parser at the root.
 		# The Parser is then able to define it's own functions for handling this error, either
 		# letting the exception halt execution of the program, or by printing an error message.
 		# By default, it just throws the error as of September 4th 2019.
-		protected def default_insufficient_arguments_handler(apex : String)
+		protected def default_missing_arguments_handler(apex : String)
 			if parent = @parent
-				parent.insufficient_arguments_handler.call apex
+				parent.missing_arguments_handler.call apex
 			else
 				raise NilParentException.new
 				return
@@ -104,11 +104,11 @@ module Phreak
 		
 		# Sets the handler block to yield to in the case of an unrecognized argument.
 		# Provides the argument to the callback.
-		def unrecognized_arguments(&block : String ->)
+		def unrecognized_args(&block : String ->)
 			@unrecognized_arguments_handler = block
 		end
 
-		# See the documentation for `default_insufficient_arguments_handler`
+		# See the documentation for `default_missing_arguments_handler`
 		protected def default_unrecognized_arguments_handler(name : String)
 			if parent = @parent
 				parent.unrecognized_arguments_handler.call name
@@ -277,7 +277,7 @@ module Phreak
 						subparser.process_token(next_token, root)
 					end
 				rescue ex : IndexError
-					subparser.insufficient_arguments_handler.call match
+					subparser.missing_arguments_handler.call match
 				end
 			else
 				# This branch in the code is reached if the subparser did not create any additional bindings -
