@@ -1,10 +1,19 @@
 # Phreak
-
 Phreak is a CLI builder in the style of Crystal's builtin OptionParser. It aims
 to provide greater flexibility by integrating subcommands natively, all while
 retaining a very simple callback based code style.
 
-Note that, at the moment, Phreak's syntax may be subject to change.
+## Features
+Much like OptionParser, Phreak makes registering commands incredibly easy:
+```crystal
+require "phreak"
+
+Phreak.parse! do
+   
+end
+```
+
+## Transitioning from OptionParser
 
 ## Installation
 
