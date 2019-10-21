@@ -24,6 +24,24 @@ describe Phreak::Subparser do
 				end
 			end
 		end
+
+		it "handles multilevel binding" do
+			reached = false
+
+			Phreak.parse("foo bar".split(" ")) do |root|
+				root.bind(word: "foo") do |sub|
+					sub.bind(word: "bar") do |sub|
+						reached = true
+					end
+
+					sub.bind(word: "baz") do |sub|
+						raise Exception.new("Should not have reached this point!")
+					end
+				end
+			end
+
+			reached.should eq true
+		end
 	end
 
 	describe "#fuzzy_bind" do
