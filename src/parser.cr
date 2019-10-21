@@ -15,7 +15,7 @@ module Phreak
 			end
 
 			@default_action_handler = ->() do
-
+				# Do nothing
 			end
 		end
 
