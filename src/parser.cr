@@ -15,7 +15,7 @@ module Phreak
 			end
 
 			@default_action_handler = ->() do
-				raise NoArgumentsException.new "No arguments were supplied!"
+
 			end
 		end
 
