@@ -1,4 +1,4 @@
 spec:
-	crystal spec spec/*
+	crystal spec
 
 .PHONY: spec

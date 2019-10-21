@@ -79,6 +79,10 @@ module Phreak
 		end
 
 		# Binds a block to a callback in the case that there are not enough arguments to continue parsing.
+		# Note that this will only be called if Phreak runs out of arguments.
+		# If your code invokes next_token on the root without assuring a token exists,
+		# an InsufficientArgumentsException will be raised, but missing_args will not be
+		# called.
 		def missing_args(&block : String ->)
 			@missing_arguments_handler = block
 		end
@@ -87,7 +91,7 @@ module Phreak
 		# This allows for an error bubbling mechanism - if any of the subparsers above this one
 		# on the chain have overridden the missing arguments handler, the exception will
 		# be captured there, where it can be handled in whatever way the user intends. If the
-		# user never defines a missing argument handler (via `missing_arugments`),
+		# user never defines a missing argument handler (via `missing_args`),
 		# this error will continue to bubble, eventually reaching the Parser at the root.
 		# The Parser is then able to define it's own functions for handling this error, either
 		# letting the exception halt execution of the program, or by printing an error message.
@@ -170,6 +174,12 @@ module Phreak
 					invoke_event(wildcard, raw, root)
 				else
 					@unrecognized_arguments_handler.call token
+
+					# If the handler just called didn't abort execution, phreak will
+					# just keep parsing
+					if root.token_available?
+						process_token(root.next_token, root)
+					end
 				end
 			end
 		end
@@ -261,7 +271,7 @@ module Phreak
 			# a subparser to pass into that event, so that it can bind the next keyword
 			# if desired.
 			subparser = Subparser.new self
-			
+
 			binding.event.call(subparser, match)
 
 			# Now that the event code has run, we want to check if any bindings were created
@@ -276,7 +286,7 @@ module Phreak
 						# method.
 						subparser.process_token(next_token, root)
 					end
-				rescue ex : IndexError
+				rescue ex : InsufficientArgumentsException
 					subparser.missing_arguments_handler.call match
 				end
 			else

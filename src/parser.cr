@@ -30,6 +30,9 @@ module Phreak
 
 		# Returns the next token, if available. Will raise an exception if `@args.size == 0`
 		def next_token : String | Nil
+			# If there isn't a token, throw an exception
+			raise InsufficientArgumentsException.new unless token_available?
+			# This just returns the first thing in the args array
 			@args.delete_at(0)
 		end
 
