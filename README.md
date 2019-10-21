@@ -1,5 +1,6 @@
 # Phreak
 [![Build Status](https://travis-ci.org/shinzlet/phreak.svg?branch=master)](https://travis-ci.org/shinzlet/phreak/)
+
 Phreak is a CLI builder in the style of Crystal's builtin OptionParser. It aims
 to provide greater flexibility by integrating subcommands natively, all while
 retaining a very simple callback based code style.
