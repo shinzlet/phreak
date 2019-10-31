@@ -155,7 +155,7 @@ module Phreak
 			end
 
 			# Note that the `handle_*something*` functions can all throw an
-			# `UnrecognizedTokenException` in the event that the token is unrecognized.
+			# `InternalUnrecognizedTokenException` in the event that the token is unrecognized.
 			# This begin-rescue block just catches that and bubbles the error up 
 			# (see `Subparser#default_unrecognized_arguments_handler` for info).
 			begin
@@ -167,9 +167,27 @@ module Phreak
 				when 1
 					handle_chars(root, token)
 				when 2
+					# TODO: when an apex is reached, handle_name will call process_token (this)
+					# for all remaining arguments at the apex level. However, if
+					# a binding is not found, this will happen:
+					# process_token:
+					# 	handle_name:
+					#   process_token (Because we were at an apex):
+					#    handle_char/name (the next token):
+					#     raise InternalUnrecognizedTokenException
+					# the deeper process_token rescues that exception as expected, but
+					# if **that** exception handler throws its own InternalUnrecognizedTokenException
+					# (the root parser does this by default), then THAT exception gets
+					# caught by the first call of process_token. However, in that shallower
+					# context, `token` will be equal to the previous apex token! So
+					# ultimately, THAT will be the exception that crashes the program,
+					# but it will say the crash occurred when parsing the previous keyword
+					# (the apex), which actually parsed just fine.
+					#
+					# Ugh.
 					handle_name(root, long_flag: token)
 				end
-			rescue ex : UnrecognizedTokenException
+			rescue ex : InternalUnrecognizedTokenException
 				if wildcard = @wildcard
 					invoke_event(wildcard, raw, root)
 				else
@@ -186,7 +204,7 @@ module Phreak
 
 		# Searches for a binding with a word or long_flag that match the argument.
 		# Only one of word or long_flag should be a String, the other should be nil.
-		# If there are no matches, an `UnrecognizedTokenException` is raised.
+		# If there are no matches, an `InternalUnrecognizedTokenException` is raised.
 		private def handle_name(root : Parser, word : String | Nil = nil, long_flag : String | Nil = nil) : Nil
 			# Ensure that one and only one of word and long flag are defined
 			if (word && long_flag) || (word == long_flag)
@@ -243,7 +261,7 @@ module Phreak
 			end
 
 			# If this point is reached, it means none of the bindings matched this word.
-			raise UnrecognizedTokenException.new "Unrecognized token `#{word}`!"
+			raise InternalUnrecognizedTokenException.new "Unrecognized token `#{word}`!"
 		end
 
 		# Accepts a block of characters, identifying the bound event for each one and invoking them if
@@ -259,7 +277,7 @@ module Phreak
 				end
 
 				if !found
-					raise UnrecognizedTokenException.new "Unrecognized token `#{flag}`!"
+					raise InternalUnrecognizedTokenException.new "Unrecognized token `#{flag}`!"
 				end
 			end
 		end
@@ -305,8 +323,7 @@ module Phreak
 				# --time argument would never get read. So, what we really want to do is create a loop instead
 				# of returning. We will consume new arguments at the highest level available to us (our global
 				# maximum). This means that time will be correctly read. Keep in mind that this loop is recursive!
-				if root.token_available?
-					# This typecast is safe, as we just assured next_token (String | Nil) is not Nil
+				if root.token_available?  # This typecast is safe, as we just assured next_token (String | Nil) is not Nil
 					next_token = root.next_token.to_s
 					process_token(next_token, root)
 				end

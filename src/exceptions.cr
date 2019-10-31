@@ -4,6 +4,9 @@ module Phreak
 
 	class UnrecognizedTokenException < Exception
 	end
+	
+	class InternalUnrecognizedTokenException < Exception
+	end
 
 	class MalformedHandleRequestException < Exception
 	end

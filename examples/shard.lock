@@ -2,5 +2,5 @@ version: 1.0
 shards:
   phreak:
     github: shinzlet/phreak
-    commit: 5e6f7ebb451c099b6028fd9b294e0644ca965d42
+    commit: 10dbf55eb099e61de63b37a6e13ab77d77a2c2d7
 
