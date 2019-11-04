@@ -321,4 +321,4 @@ works under the hood!
 
 ## Contributors
 
-- [shinz](https://github.com/shinzlet) - creator and maintainer
+- [shinzlet](https://github.com/shinzlet) - creator and maintainer
