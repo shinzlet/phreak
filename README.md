@@ -12,25 +12,25 @@ section. (My email address is in my github profile.)
 
 ## Table of contents
 
-- [Features](##features)
-- [Installation](##installation)
-- [Examples](##examples)
-- [Development](##development)
-- [Contributing](##contributing)
-- [Contributors](##contributors)
+- [Features](#features)
+- [Installation](#installation)
+- [Examples](#examples)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Contributors](#contributors)
 
 ## Features
 
-- [Basic flags](###basic-commands)
-- [Subcommands](###subcommands)
-- [Nested subcommands](###nested-subcommands)
-- [Command types](###command-types)
-- [Fuzzy matching](###fuzzy-matching)
-- [Compound flags](###compound-flags)
-- [Default actions](###default-actions)
-- [Basic error handling](###basic-error-handling)
-- [Error bubbling](###error-bubbling)
-- [Planned features](##planned-features)
+- [Basic flags](#basic-commands)
+- [Subcommands](#subcommands)
+- [Nested subcommands](#nested-subcommands)
+- [Command types](#command-types)
+- [Fuzzy matching](#fuzzy-matching)
+- [Compound flags](#compound-flags)
+- [Default actions](#default-actions)
+- [Basic error handling](#basic-error-handling)
+- [Error bubbling](#error-bubbling)
+- [Planned features](#planned-features)
 
 Much like OptionParser, Phreak makes registering commands incredibly easy:
 
@@ -74,7 +74,6 @@ Phreak.parse! do |root|
     end
   end
 end
-
 ```
 
 ### Nested subcommands
@@ -158,7 +157,6 @@ Phreak.parse! do |root|
     puts "C!"
   end
 end
-
 ```
 
 Given the above program, compiled to *binary*:
@@ -182,7 +180,6 @@ Phreak.parse! do |root|
     puts "no arguments provided"
   end
 end
-
 ```
 
 ### Basic error handling
@@ -251,7 +248,6 @@ Phreak.parse! do |root|
     end
   end
 end
-
 ```
 
 Let's see what happens in a few example inputs:
