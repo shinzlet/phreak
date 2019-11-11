@@ -6,7 +6,7 @@ module Phreak
     protected property bindings : Array(Binding) = [] of Binding
     protected property fuzzy_bindings : Array(Binding) = [] of Binding
     protected property wildcard : Binding | Nil = nil
-    
+
     private record Binding,
       word : String | Nil,
       long_flag : String | Nil,
@@ -136,7 +136,7 @@ module Phreak
       end
     end
 
-    # Prints all command names and descriptions defined on this subparser to 
+    # Prints all command names and descriptions defined on this subparser to
     # the given io. Can be configured by changing the following properties on
     # Subparser:
     #    `banner`
@@ -153,7 +153,7 @@ module Phreak
           io << "\n\n"
         end
       end
-      
+
       if @fuzzy_bindings.size > 0
         io << "Fuzzy-Bound Commands:\n"
         print_bindings(io, @fuzzy_bindings)
