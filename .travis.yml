@@ -4,4 +4,5 @@ crystal:
   - latest
 
 script:
-  make spec
+  - crystal spec
+  - crystal tool format --check

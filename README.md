@@ -136,10 +136,7 @@ Phreak.parse! do |root|
     end
 
     wifi.bind(word: "set", description: "Set the the wifi state.") do |set|
-      set.bind(word: "disabled", short_flag: 'd') do
-        # Responds to "nested wifi set disabled" or
-        # "nested wifi set -d"
-      end
+      # Responds to "nested wifi set"
     end
 
     wifi.bind(word: "help",
