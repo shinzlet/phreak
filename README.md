@@ -86,7 +86,9 @@ Commands:
 ```
 
 There are some more advanced formatting tricks that can be used, here -
-see [advanced help menus](#advanced-help-menus) for more information.
+see [advanced help menus](#advanced-help-menus) for more information. Also,
+for more information about how to use these menus in a more complex way,
+see [nested subcommands.](#nested-subcommands)
 
 The above two features capture most of the scope of OptionParser. However, you're
 probably here for more extensive functionality! Let's get to the good stuff.
@@ -126,20 +128,36 @@ example).
 require "phreak"
 
 Phreak.parse! do |root|
-  root.bind(word: "wifi") do |wifi|
-    wifi.bind(word: "status") do
+  root.bind(word: "wifi", description: "Configure or control wireless connections.") do |wifi|
+    wifi.banner = "Manage wireless connections. Invocation: cli wifi [subcommand]"
+
+    wifi.bind(word: "status", description: "Get the current status of the modem.") do
       # Reponds to "nested wifi status"
     end
 
-    wifi.bind(word: "set") do |set|
+    wifi.bind(word: "set", description: "Set the the wifi state.") do |set|
       set.bind(word: "disabled", short_flag: 'd') do
         # Responds to "nested wifi set disabled" or
         # "nested wifi set -d"
       end
     end
+
+    wifi.bind(word: "help",
+              description: "display specific help about the `wifi` subcommand.") do |help|
+      puts wifi
+    end
+  end
+
+  root.bind(word: "help", description: "display this help menu.") do |help|
+    puts root
   end
 end
 ```
+
+This command also demonstrates how to use documentation with nested commands! Each
+subcommand has a help command defined on it, which allows invocation like
+`./binary help` for general help, or `./binary wifi help` for more specific
+information!
 
 ### Command types
 
