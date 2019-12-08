@@ -14,7 +14,7 @@ module Phreak
         raise UnrecognizedTokenException.new "Unrecognized token '#{name}' encountered, with no unrecognized argument handlers specified."
       end
 
-      @default_action_handler = -> do
+      @default_action_handler = ->do
         # Do nothing
       end
     end
