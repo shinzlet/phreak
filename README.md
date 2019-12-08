@@ -32,6 +32,7 @@ section. (My email address is in my github profile.)
 - [Basic error handling](#basic-error-handling)
 - [Advanced Help Menus](#advanced-help-menus)
 - [Error bubbling](#error-bubbling)
+- [Reusable parsers](#reusable-parsers)
 - [Planned features](#planned-features)
 
 Much like OptionParser, Phreak makes registering commands incredibly easy:
@@ -365,6 +366,67 @@ Errors also bubble - that is, if we had not defined a `missing_args` handler on
 'hello', Phreak would then try to invoke a `missing_args` event on 'say', then
 on the root subparser. If no handlers are found on the traversal back up, an
 exception is raised.
+
+### Reusable parsers
+What we've seen above is incredibly useful for non-interactive CLIs, but
+it isn't always the case that you want to throw away your parser after the
+first use. Here's an example of how you can make an interactive CLI
+with Phreak:
+
+```crystal
+require "phreak"
+
+# Ignore this variable for now - it is specific to this example.
+running = true
+
+# This doesn't actually run the parser at all -
+# it just returns a convenient handle to it.
+parser = Phreak.create_parser do |root|
+  root.bind(word: "create") do |sub|
+    sub.grab do |sub, name|
+      puts "Creating partition #{name}"
+    end
+  end
+
+  root.bind(word: "quit") do
+    puts "Exiting."
+    running = false
+  end
+end
+
+puts "Disk formatting utility"
+
+# Here's where we will actually run the parser!
+while running
+  # Print a prompt, then read the next line.
+  printf ">> "
+  next_line = gets || ""
+
+  parser.parse(next_line.split(" "))
+end
+```
+
+This example is quite different than the others, but it showcases some
+fascinating things. We are creating a reusable parser using 
+`Phreak.create_parser`, and creating our bindings once. Then, later in
+the program, we are repeatedly calling that parser on the user's input.
+When the user enters the 'quit' command, the matching endpoint is run
+in the parser, which sets `running` to be false, thus terminating the
+loop.
+
+Here is some example output:
+
+```
+Disk formatting utility
+>> create p1    
+Creating partition p1
+>> foobar
+Unrecognized command foobar.
+>> create
+The command create requires more parameters.
+>> quit
+Exiting.
+```
 
 ## Planned features
 

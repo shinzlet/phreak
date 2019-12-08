@@ -10,10 +10,7 @@ module Phreak
     def initialize(@block)
     end
 
-    def parse!
-      parse(ARGV)
-    end
-
+    # Invokes the parser on an array of arguments.
     def parse(args : Array(String))
       Phreak.parse(args) do |root|
         @block.call root
