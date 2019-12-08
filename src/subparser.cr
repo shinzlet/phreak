@@ -68,8 +68,8 @@ module Phreak
     # that they might not be aware of.
     #
     # &block will be invoked whenever one of the keywords is detected in the parse loop.
-    # The arguments provided are the `Parser` which called the block, as well the keyword
-    # that triggered the event. The block may return either a new Subparser, generated from Parser.fork,
+    # The arguments provided are the `RootParser` which called the block, as well the keyword
+    # that triggered the event. The block may return either a new Subparser, generated from RootParser.fork,
     # or nil. If a Subparser is returned, the next keyword will be parsed using that Subparser. This allows
     # for a stronger command structure.
     def bind(word : String | Nil = nil, long_flag : String | Nil = nil,
@@ -86,7 +86,7 @@ module Phreak
     end
 
     # Creates a wildcard binding. This is more or less equivalent to calling next_token on the
-    # root `Parser`, however you don't have to worry about catching an IndexError. Nothing will
+    # root `RootParser`, however you don't have to worry about catching an IndexError. Nothing will
     # stop you from calling grab multiple times, but a subparser will only keep track of the
     # final bound callback.
     def grab(&block : Subparser, String -> Nil) : Nil
@@ -107,8 +107,8 @@ module Phreak
     # on the chain have overridden the missing arguments handler, the exception will
     # be captured there, where it can be handled in whatever way the user intends. If the
     # user never defines a missing argument handler (via `missing_args`),
-    # this error will continue to bubble, eventually reaching the Parser at the root.
-    # The Parser is then able to define it's own functions for handling this error, either
+    # this error will continue to bubble, eventually reaching the RootParser at the root.
+    # The RootParser is then able to define it's own functions for handling this error, either
     # letting the exception halt execution of the program, or by printing an error message.
     # By default, it just throws the error as of September 4th 2019.
     protected def default_missing_arguments_handler(apex : String)
@@ -207,7 +207,7 @@ module Phreak
     # Accepts a raw argument and determines if it is a word, short flag, or long flag.
     # Once it's type is determined, this method runs the correct handler to call an event.
     # If it is malformed, a `MalformedTokenException` is raised.
-    protected def process_token(token : String, root : Parser) : Nil
+    protected def process_token(token : String, root : RootParser) : Nil
       # A wildcard defined with `Subparser#grab` will recieve the raw argument.
       raw = token
 
@@ -287,7 +287,7 @@ module Phreak
     # Searches for a binding with a word or long_flag that match the argument.
     # Only one of word or long_flag should be a String, the other should be nil.
     # If there are no matches, an `InternalUnrecognizedTokenException` is raised.
-    private def handle_name(root : Parser, word : String | Nil = nil, long_flag : String | Nil = nil) : Nil
+    private def handle_name(root : RootParser, word : String | Nil = nil, long_flag : String | Nil = nil) : Nil
       # Ensure that one and only one of word and long flag are defined
       if (word && long_flag) || (word == long_flag)
         raise MalformedHandleRequestException.new "Both word and long_flag are of the same type (both undefined, or both strings)! Only one should be defined."
@@ -348,7 +348,7 @@ module Phreak
 
     # Accepts a block of characters, identifying the bound event for each one and invoking them if
     # it exists.
-    private def handle_chars(root : Parser, char_block : String) : Nil
+    private def handle_chars(root : RootParser, char_block : String) : Nil
       char_block.chars.each do |flag|
         found = false
         @bindings.each do |binding|
@@ -366,7 +366,7 @@ module Phreak
 
     # Calls the bound event, checks if more bindings were requested on the subparser,
     # and if so executes them.
-    private def invoke_event(binding : Binding, match : String, root : Parser)
+    private def invoke_event(binding : Binding, match : String, root : RootParser)
       # If the word does match, we need to invoke the event. First, we'll create
       # a subparser to pass into that event, so that it can bind the next keyword
       # if desired.
@@ -393,7 +393,7 @@ module Phreak
         # This branch in the code is reached if the subparser did not create any additional bindings -
         # In essence, we have reached a local maximum in the nesting of this command.
         #
-        # If we return here, the stack will collapse back down to `Parser#begin_parsing`. This means
+        # If we return here, the stack will collapse back down to `RootParser#begin_parsing`. This means
         # that if we have a binding structure like this:
         # a > crystal
         #  	b > build (consumes next_token to get filename)
