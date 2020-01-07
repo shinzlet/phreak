@@ -56,7 +56,7 @@ but documenting a CLI as you work is rather convenient.
 ```crystal
 require "phreak"
 
-Phreak.parse do |root|
+Phreak.parse! do |root|
   # Sets the helpmenu banner for `root`
   root.banner = "A cli."
 
@@ -220,7 +220,7 @@ Given the above program, compiled to *binary*:
 ```sh
 ./binary -abc     # Prints "A!B!C!"
 ./binary -ac      # Prints "A!C!"
-./binary -bbb     # Prints "B!"
+./binary -bbb     # Prints "B!B!B!"
 ```
 
 ### Default actions
