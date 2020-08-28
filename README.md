@@ -1,3 +1,12 @@
+# PSA
+Since this library was written, [RX14](https://github.com/RX14) and others have
+integrated many of Phreak's features into [`OptionParser`](https://crystal-lang.org/api/latest/OptionParser.html), the CLI builder in the
+standard library. I'm thrilled to see that these changes have been made, but
+Phreak now brings much less to the table than it did in it's hayday.
+
+So, before using Phreak, please check out `OptionParser`'s updated feature set - 
+you likely don't need a library at all!
+
 # Phreak
 
 [![Build Status](https://travis-ci.org/shinzlet/phreak.svg?branch=master)](https://travis-ci.org/shinzlet/phreak/)
